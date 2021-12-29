@@ -17,6 +17,9 @@
 # builded version
 cmd/jsonparser/jsonparser
 
+# this folder contain builded zip files 
+cmd/jsonparser/zip/
+
 # system cache
 .DS_Store
 
