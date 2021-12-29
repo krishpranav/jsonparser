@@ -7,9 +7,9 @@ go get -u github.com/krishpranav/jsonparser
 ```
 
 ## Installing the cli tool:
-- [macOS]()
-- [windows]()
-- [linux]()
+- [macOS](https://github.com/krishpranav/jsonparser/releases/download/v1/macOS.zip)
+- [windows](https://github.com/krishpranav/jsonparser/releases/download/v1/windows.zip)
+- [linux](https://github.com/krishpranav/jsonparser/releases/download/v1/linux.zip)
 
 ## Cli tool:
 ```bash
