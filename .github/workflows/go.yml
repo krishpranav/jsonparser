@@ -20,6 +20,9 @@ jobs:
 
     - name: Build
       run: go build cmd/jsonparser/jsonparser.go
+    
+    - name: Test
+      run: go test 
 
   build-macos:
     runs-on: ubuntu-latest
@@ -33,3 +36,6 @@ jobs:
 
     - name: Build
       run: go build cmd/jsonparser/jsonparser.go
+
+    - name: Test
+      run: go test 
