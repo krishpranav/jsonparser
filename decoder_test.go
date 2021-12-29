@@ -5,9 +5,7 @@ import (
 	"testing"
 )
 
-func mkReader(s string) *bytes.Reader {
-	return bytes.NewReader([]byte(s))
-}
+func mkReader(s string) *bytes.Reader { return bytes.NewReader([]byte(s)) }
 
 func TestDecoderSimple(t *testing.T) {
 	var (
@@ -129,6 +127,81 @@ func TestDecoderFlat(t *testing.T) {
 
 	if err := decoder.Err(); err != nil {
 		t.Fatalf("decoder error: %s", err)
+	}
+}
+
+func TestDecoderMultiDoc(t *testing.T) {
+	var (
+		counter int
+		mv      *MetaValue
+		body    = `{ "test": "test hello", "id": 1, "name": "SomeNameOne" }
+{ "test": "test hello", "id": 2, "name": "SomeNameTwo" }
+{ "test": "test hello", "id": 3, "name": "SomeNameThree" }
+{ "test": "test hello", "id": 4, "name": "SomeNameFour" }
+{ "test": "test hello", "id": 5, "name": "SomeNameFive" }
+`
+	)
+
+	decoder := NewDecoder(mkReader(body), 0)
+
+	for mv = range decoder.Stream() {
+		if mv.ValueType != Object {
+			t.Fatalf("got %v value type, expected: Object value type", mv.ValueType)
+		}
+		counter++
+		t.Logf("depth=%d offset=%d len=%d (%v)", mv.Depth, mv.Offset, mv.Length, mv.Value)
+	}
+	if err := decoder.Err(); err != nil {
+		t.Fatalf("decoder error: %s", err)
+	}
+	if counter != 5 {
+		t.Fatalf("expected 5 items, got %d", counter)
+	}
+
+	counter = 0
+	kvcounter := 0
+	decoder = NewDecoder(mkReader(body), 1)
+
+	for mv = range decoder.Stream() {
+		switch mv.Value.(type) {
+		case KV:
+			kvcounter++
+		default:
+			counter++
+		}
+		t.Logf("depth=%d offset=%d len=%d (%v)", mv.Depth, mv.Offset, mv.Length, mv.Value)
+	}
+	if err := decoder.Err(); err != nil {
+		t.Fatalf("decoder error: %s", err)
+	}
+	if kvcounter != 0 {
+		t.Fatalf("expected 0 keyvalue items, got %d", kvcounter)
+	}
+	if counter != 15 {
+		t.Fatalf("expected 15 items, got %d", counter)
+	}
+
+	counter = 0
+	kvcounter = 0
+	decoder = NewDecoder(mkReader(body), 1).EmitKV()
+
+	for mv = range decoder.Stream() {
+		switch mv.Value.(type) {
+		case KV:
+			kvcounter++
+		default:
+			counter++
+		}
+		t.Logf("depth=%d offset=%d len=%d (%v)", mv.Depth, mv.Offset, mv.Length, mv.Value)
+	}
+	if err := decoder.Err(); err != nil {
+		t.Fatalf("decoder error: %s", err)
+	}
+	if kvcounter != 15 {
+		t.Fatalf("expected 15 keyvalue items, got %d", kvcounter)
+	}
+	if counter != 0 {
+		t.Fatalf("expected 0 items, got %d", counter)
 	}
 }
 
