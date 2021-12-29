@@ -131,3 +131,32 @@ func TestDecoderFlat(t *testing.T) {
 		t.Fatalf("decoder error: %s", err)
 	}
 }
+
+func TestDecoderReaderFailure(t *testing.T) {
+	var (
+		failAfter = 900
+		mockData  = byte('[')
+	)
+
+	r := newMockReader(failAfter, mockData)
+	decoder := NewDecoder(r, -1)
+
+	for mv := range decoder.Stream() {
+		t.Logf("depth=%d offset=%d len=%d (%v)", mv.Depth, mv.Offset, mv.Length, mv.Value)
+	}
+
+	err := decoder.Err()
+	t.Logf("got error: %s", err)
+	if err == nil {
+		t.Fatalf("missing expected decoder error")
+	}
+
+	derr, ok := err.(DecoderError)
+	if !ok {
+		t.Fatalf("expected error of type DecoderError, got %T", err)
+	}
+
+	if derr.ReaderErr() == nil {
+		t.Fatalf("missing expected underlying reader error")
+	}
+}
