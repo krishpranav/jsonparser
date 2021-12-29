@@ -3,6 +3,7 @@ package jsonparser
 import (
 	"bytes"
 	"encoding/json"
+	"io"
 )
 
 type ValueType int
@@ -62,4 +63,23 @@ type Decoder struct {
 	err           error
 	lineNo        int
 	lineStart     int64
+}
+
+func NewDecoder(r io.Reader, emitDepth int) *Decoder {
+	d := &Decoder{
+		scanner:   newScanner(r),
+		emitDepth: emitDepth,
+		scratch:   &scratch{data: make([]byte, 1024)},
+		metaCh:    make(chan *MetaValue, 128),
+	}
+	if emitDepth < 0 {
+		d.emitDepth = 0
+		d.emitRecursive = true
+	}
+	return d
+}
+
+func (d *Decoder) ObjectAsKVS() *Decoder {
+	d.objectAsKVS = true
+	return d
 }
