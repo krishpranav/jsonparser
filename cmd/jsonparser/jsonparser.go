@@ -87,7 +87,7 @@ options:
 
 
 example:
-	jsonparser -d 1 yourjsonfile.json
+	jsonparser -d 1 < test.json
 `
 
 func help() {
