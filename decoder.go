@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"io"
+	"sync/atomic"
 )
 
 type ValueType int
@@ -82,4 +83,65 @@ func NewDecoder(r io.Reader, emitDepth int) *Decoder {
 func (d *Decoder) ObjectAsKVS() *Decoder {
 	d.objectAsKVS = true
 	return d
+}
+
+func (d *Decoder) EmitKV() *Decoder {
+	d.emitKV = true
+	return d
+}
+
+func (d *Decoder) Recursive() *Decoder {
+	d.emitRecursive = true
+	return d
+}
+
+func (d *Decoder) Stream() chan *MetaValue {
+	go d.decode()
+	return d.metaCh
+}
+
+func (d *Decoder) Pos() int {
+	return int(d.pos)
+}
+
+func (d *Decoder) Err() error {
+	return d.err
+}
+
+func (d *Decoder) decode() {
+	defer close(d.metaCh)
+	d.skipSpaces()
+	for d.remaining() > 0 {
+		_, err := d.emitAny()
+		if err != nil {
+			d.err = err
+			break
+		}
+		d.skipSpaces()
+	}
+}
+
+func (d *Decoder) emitAny() (interface{}, error) {
+	if d.pos >= atomic.LoadInt64(&d.end) {
+		return nil, d.mkError(ErrUnexpectedEOF)
+	}
+	offset := d.pos - 1
+	i, t, err := d.any()
+	if d.willEmit() {
+		d.metaCh <- &MetaValue{
+			Offset:    int(offset),
+			Length:    int(d.pos - offset),
+			Depth:     d.depth,
+			Value:     i,
+			ValueType: t,
+		}
+	}
+	return i, err
+}
+
+func (d *Decoder) willEmit() bool {
+	if d.emitRecursive {
+		return d.depth >= d.emitDepth
+	}
+	return d.depth == d.emitDepth
 }
