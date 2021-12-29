@@ -75,3 +75,33 @@ func (s *scanner) remaining() int64 {
 func (s *scanner) cur() byte {
 	return s.buf[s.ipos]
 }
+
+func (s *scanner) next() byte {
+	if s.pos >= atomic.LoadInt64(&s.end) {
+		return nullByte
+	}
+	s.ipos++
+
+	if s.ipos > s.ifill {
+		s.ifill = <-s.fillReady
+
+		s.buf[0] = s.buf[len(s.buf)-1]
+		copy(s.buf[1:], s.nbuf[:])
+		s.ipos = 1
+
+		if s.end == maxInt {
+			s.fillReq <- struct{}{}
+		}
+	}
+
+	s.pos++
+	return s.buf[s.ipos]
+}
+
+func (s *scanner) back() {
+	if s.ipos <= 0 {
+		panic("back buffer exhausted")
+	}
+	s.ipos--
+	s.pos--
+}
