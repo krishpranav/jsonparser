@@ -13,3 +13,13 @@
 
 # Dependency directories (remove the comment below to include it)
 # vendor/
+
+# builded version
+cmd/jsonparser/jsonparser
+
+# system cache
+.DS_Store
+
+# ide cache
+.vscode/
+.idea/
