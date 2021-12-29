@@ -1,5 +1,9 @@
 package jsonparser
 
+import (
+	"unicode/utf8"
+)
+
 type scratch struct {
 	data []byte
 	fill int
@@ -29,5 +33,11 @@ func (s *scratch) add(c byte) {
 }
 
 func (s *scratch) addRune(r rune) int {
+	if s.fill+utf8.UTFMax >= cap(s.data) {
+		s.grow()
+	}
 
+	n := utf8.EncodeRune(s.data[s.fill:], r)
+	s.fill += n
+	return n
 }
