@@ -20,7 +20,9 @@ type DecoderError struct {
 	readerErr error
 }
 
-func (e DecoderError) ReaderErr() error { return e.readerErr }
+func (e DecoderError) ReaderErr() error {
+	return e.readerErr
+}
 
 func (e DecoderError) Error() string {
 	loc := fmt.Sprintf("%s [%d,%d]", quoteChar(e.atChar), e.pos[0], e.pos[1])
